@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 
 use crate::claude::Annotation;
 
