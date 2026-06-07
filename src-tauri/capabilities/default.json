@@ -1,0 +1,24 @@
+{
+  "identifier": "default",
+  "description": "Default capability for all windows",
+  "windows": ["main", "overlay"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-size",
+    "core:window:allow-set-position",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:window:allow-set-ignore-cursor-events",
+    "core:window:allow-current-monitor",
+    "core:window:allow-primary-monitor",
+    "core:window:allow-available-monitors",
+    "core:event:allow-emit",
+    "core:event:allow-listen",
+    "shell:allow-open",
+    "fs:allow-read-all",
+    "fs:allow-write-all",
+    "fs:allow-create",
+    "fs:allow-mkdir"
+  ]
+}

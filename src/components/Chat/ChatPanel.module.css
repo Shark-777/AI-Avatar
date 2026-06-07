@@ -1,0 +1,257 @@
+.panel {
+  width: 320px;
+  height: 480px;
+  background: rgba(12, 12, 24, 0.94);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -6px 0 32px rgba(0,0,0,0.5);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel.visible {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Position variants */
+.pos-right {
+  border-radius: 16px 0 0 16px;
+}
+
+.pos-left {
+  border-radius: 0 16px 16px 0;
+}
+
+.pos-bottom {
+  border-radius: 16px 16px 0 0;
+  width: 480px;
+  height: 300px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #4ade80;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.headerRight {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+.analyzing {
+  color: #c8a96e;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 20px;
+}
+
+.empty p {
+  color: rgba(255,255,255,0.45);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.hint {
+  color: rgba(255,255,255,0.25) !important;
+  font-size: 11px !important;
+}
+
+.bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 88%;
+  animation: bubbleIn 0.25s ease;
+}
+
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.userBubble {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.assistantBubble {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.bubbleText {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.userBubble .bubbleText {
+  background: rgba(200, 169, 110, 0.2);
+  border: 1px solid rgba(200, 169, 110, 0.25);
+  color: rgba(255,255,255,0.9);
+  border-radius: 12px 12px 2px 12px;
+}
+
+.assistantBubble .bubbleText {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.85);
+  border-radius: 2px 12px 12px 12px;
+}
+
+.stateIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  margin-bottom: 2px;
+}
+
+.stateIndicator[data-state="alert"] { background: #ff4444; }
+.stateIndicator[data-state="thinking"] { background: #c8a96e; }
+.stateIndicator[data-state="speaking"] { background: #60a5fa; }
+
+.bubbleTime {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  padding: 0 4px;
+}
+
+.inputArea {
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: rgba(255,255,255,0.9);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.input:focus {
+  border-color: rgba(200,169,110,0.4);
+}
+
+.input:disabled {
+  opacity: 0.5;
+}
+
+.sendBtn {
+  width: 36px;
+  height: 36px;
+  background: rgba(200,169,110,0.2);
+  border: 1px solid rgba(200,169,110,0.3);
+  border-radius: 10px;
+  color: rgba(200,169,110,0.9);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: rgba(200,169,110,0.3);
+  transform: scale(1.05);
+}
+
+.sendBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.apiKeyBanner {
+  padding: 6px 12px;
+  background: rgba(255,170,50,0.1);
+  border-top: 1px solid rgba(255,170,50,0.2);
+  font-size: 11px;
+  color: rgba(255,170,50,0.8);
+  text-align: center;
+  flex-shrink: 0;
+}
