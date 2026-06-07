@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { AvatarId, AvatarState } from '../../types';
 import { AVATARS } from './avatarData';
 import styles from './AvatarRenderer.module.css';
@@ -207,10 +208,37 @@ export function AvatarRenderer({ avatarId, state, size = 190, onClick, onLongPre
   const info = AVATARS[avatarId];
   const FaceComponent = FACE_COMPONENTS[avatarId];
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
+  const didDrag = useRef(false);
 
-  const handleMouseDown = () => {
-    if (!onLongPress) return;
-    longPressTimer.current = setTimeout(() => onLongPress(), 600);
+  const handleMouseDown = (e: React.MouseEvent) => {
+    didDrag.current = false;
+    mouseDownPos.current = { x: e.clientX, y: e.clientY };
+
+    // Long press timer for picker
+    if (onLongPress) {
+      longPressTimer.current = setTimeout(() => {
+        if (!didDrag.current) onLongPress();
+      }, 700);
+    }
+  };
+
+  const handleMouseMove = async (e: React.MouseEvent) => {
+    if (!mouseDownPos.current) return;
+    const dx = Math.abs(e.clientX - mouseDownPos.current.x);
+    const dy = Math.abs(e.clientY - mouseDownPos.current.y);
+    if ((dx > 4 || dy > 4) && !didDrag.current) {
+      didDrag.current = true;
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      // Drag the whole window
+      try {
+        await getCurrentWindow().startDragging();
+      } catch (_) {}
+      mouseDownPos.current = null;
+    }
   };
 
   const handleMouseUp = () => {
@@ -218,6 +246,11 @@ export function AvatarRenderer({ avatarId, state, size = 190, onClick, onLongPre
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
+    mouseDownPos.current = null;
+  };
+
+  const handleClick = () => {
+    if (!didDrag.current && onClick) onClick();
   };
 
   useEffect(() => {
@@ -235,8 +268,9 @@ export function AvatarRenderer({ avatarId, state, size = 190, onClick, onLongPre
         '--accent': info.accentColor,
         '--primary': info.primaryColor,
       } as React.CSSProperties}
-      onClick={onClick}
+      onClick={handleClick}
       onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       title={`${info.name}`}
