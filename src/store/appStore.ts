@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createElement, createContext, useContext, useReducer, ReactNode } from 'react';
 import {
   AvatarId, AvatarState, Message, FloatingCard,
   AppConfig, ClaudeResponse, Annotation, DEFAULT_CONFIG,
@@ -112,11 +112,7 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  return (
-    <AppContext.Provider value={{ state, dispatch }}>
-      {children}
-    </AppContext.Provider>
-  );
+  return createElement(AppContext.Provider, { value: { state, dispatch } }, children);
 }
 
 export function useAppStore() {
