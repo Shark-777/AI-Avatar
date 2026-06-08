@@ -4,7 +4,7 @@ import { LogicalSize, LogicalPosition } from '@tauri-apps/api/dpi';
 
 const AVATAR_W = 200;
 const PANEL_W = 320;
-const WIN_H_COLLAPSED = 220;
+const WIN_H_COLLAPSED = 260;
 const WIN_H_EXPANDED = 500;
 const MARGIN = 20;
 
