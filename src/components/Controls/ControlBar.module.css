@@ -1,21 +1,31 @@
+/* Overlay bar — sits at the bottom of the avatarFrame circle */
 .bar {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  background: rgba(255,255,255,0.04);
-  border-top: 1px solid rgba(255,255,255,0.06);
-  border-radius: 0 0 14px 14px;
+  gap: 4px;
+  padding: 5px 8px;
+  background: rgba(10, 10, 20, 0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  z-index: 20;
+  white-space: nowrap;
+  /* Keep bar narrower than the 160px circle — max 152px */
+  max-width: 152px;
 }
 
 .btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.06);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -24,8 +34,8 @@
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(255,255,255,0.12);
-  transform: scale(1.05);
+  background: rgba(255,255,255,0.14);
+  transform: scale(1.08);
 }
 
 .btn:disabled {
@@ -34,29 +44,29 @@
 }
 
 .captureBtn {
-  background: rgba(200,169,110,0.15);
-  border-color: rgba(200,169,110,0.3);
+  background: rgba(200,169,110,0.18);
+  border-color: rgba(200,169,110,0.35);
 }
 
 .captureBtn:hover:not(:disabled) {
-  background: rgba(200,169,110,0.25);
+  background: rgba(200,169,110,0.30);
 }
 
 .toggleGroup {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   flex: 1;
   justify-content: flex-end;
 }
 
 .toggle {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   border: 1px solid rgba(255,255,255,0.06);
   background: transparent;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;

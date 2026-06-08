@@ -62,7 +62,7 @@ function MainView() {
             <FloatingCards cards={state.floatingCards} />
           </div>
 
-          {/* Avatar + frame */}
+          {/* Avatar + frame — ControlBar overlays the bottom of the circle */}
           <div className={styles.avatarFrame}>
             <AvatarRenderer
               avatarId={state.avatar}
@@ -80,10 +80,10 @@ function MainView() {
             >
               ⚙
             </button>
-          </div>
 
-          {/* Controls below avatar */}
-          <ControlBar />
+            {/* Controls overlay — bottom of avatar circle */}
+            <ControlBar />
+          </div>
         </div>
       </div>
 

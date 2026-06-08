@@ -1,32 +1,32 @@
-/* Full-window transparent container */
+/* Full-window transparent container — size to content, not 100% of the window */
 .root {
   width: 100%;
-  height: 100%;
+  height: fit-content;
   background: transparent;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Flex row: [panel] [avatar-column] */
 .wrapper {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   gap: 0;
-  height: 100%;
+  height: fit-content;
   width: 100%;
 }
 
-/* Right-side avatar column */
+/* Right-side avatar column — auto height so it never clips the avatar */
 .avatarColumn {
   width: 200px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   background: rgba(12, 12, 24, 0.88);
   backdrop-filter: blur(20px);
   border-radius: 20px;
@@ -34,10 +34,10 @@
   box-shadow:
     0 8px 32px rgba(0,0,0,0.6),
     inset 0 1px 0 rgba(255,255,255,0.06);
-  padding: 12px 0 8px;
+  padding: 20px 0 0;
   overflow: visible;
   position: relative;
-  height: 100%;
+  height: auto;
 }
 
 /* Drag handle hint */
@@ -62,14 +62,16 @@
   pointer-events: none;
 }
 
-/* Avatar ring/frame */
+/* Avatar ring/frame — fixed size, position: relative so children can overlay */
 .avatarFrame {
   position: relative;
+  width: 176px;   /* 160px avatar + 8px padding each side */
+  height: 176px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
-  flex: 1;
+  flex-shrink: 0;
+  margin-bottom: 4px;
 }
 
 /* Settings gear button — top right of frame */
