@@ -13,24 +13,32 @@ const OVERLAY_URL: &str = "index.html#/overlay";
 /// Creates (if it does not already exist) or shows the full-screen transparent
 /// click-through overlay window used for drawing annotations.
 pub fn show_overlay(app: &AppHandle) -> Result<()> {
+    let (x, y, width, height) = primary_monitor_logical_frame(app)?;
+
     // If the window already exists just show it and return.
     if let Some(existing) = app.get_webview_window(OVERLAY_LABEL) {
+        existing
+            .set_position(tauri::LogicalPosition::new(x, y))
+            .map_err(|e| anyhow!("Failed to position existing overlay window: {}", e))?;
+        existing
+            .set_size(tauri::LogicalSize::new(width, height))
+            .map_err(|e| anyhow!("Failed to size existing overlay window: {}", e))?;
+        existing
+            .set_ignore_cursor_events(true)
+            .map_err(|e| anyhow!("Failed to set ignore-cursor-events on existing overlay: {}", e))?;
         existing
             .show()
             .map_err(|e| anyhow!("Failed to show existing overlay window: {}", e))?;
         return Ok(());
     }
 
-    // Determine primary monitor dimensions so we can make the overlay fill the
-    // entire screen regardless of resolution.
-    let (width, height) = primary_monitor_size(app)?;
-
     WebviewWindowBuilder::new(app, OVERLAY_LABEL, WebviewUrl::App(OVERLAY_URL.into()))
         .title("Buddy Overlay")
-        .inner_size(width as f64, height as f64)
-        .position(0.0, 0.0)
+        .inner_size(width, height)
+        .position(x, y)
         .decorations(false)
         .transparent(true)
+        .shadow(false)
         .always_on_top(true)
         .skip_taskbar(true)
         .resizable(false)
@@ -44,12 +52,13 @@ pub fn show_overlay(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-/// Hides the overlay window without destroying it so it can be reshown quickly.
+/// Closes the overlay window so a blank transparent annotation surface cannot
+/// linger on the desktop after the annotation is cleared.
 pub fn hide_overlay(app: &AppHandle) -> Result<()> {
     if let Some(window) = app.get_webview_window(OVERLAY_LABEL) {
         window
-            .hide()
-            .map_err(|e| anyhow!("Failed to hide overlay window: {}", e))?;
+            .close()
+            .map_err(|e| anyhow!("Failed to close overlay window: {}", e))?;
     }
     // Silently succeed if the window does not exist yet.
     Ok(())
@@ -96,4 +105,27 @@ pub fn primary_monitor_size(app: &AppHandle) -> Result<(u32, u32)> {
 
     let size = monitor.size();
     Ok((size.width, size.height))
+}
+
+fn primary_monitor_logical_frame(app: &AppHandle) -> Result<(f64, f64, f64, f64)> {
+    let window = app
+        .get_webview_window("main")
+        .or_else(|| app.get_webview_window(OVERLAY_LABEL))
+        .ok_or_else(|| anyhow!("No available window to query monitor info"))?;
+
+    let monitor = window
+        .primary_monitor()
+        .map_err(|e| anyhow!("Failed to query primary monitor: {}", e))?
+        .ok_or_else(|| anyhow!("No primary monitor found"))?;
+
+    let scale = monitor.scale_factor();
+    let size = monitor.size();
+    let position = monitor.position();
+
+    Ok((
+        position.x as f64 / scale,
+        position.y as f64 / scale,
+        size.width as f64 / scale,
+        size.height as f64 / scale,
+    ))
 }

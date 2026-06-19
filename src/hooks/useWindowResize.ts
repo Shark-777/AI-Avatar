@@ -1,44 +1,48 @@
 import { useCallback } from 'react';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { LogicalSize, LogicalPosition } from '@tauri-apps/api/dpi';
+import { invoke } from '@tauri-apps/api/core';
+import { loadBuddyWindowPosition } from '../utils/windowPosition';
 
-const AVATAR_W = 200;
-const PANEL_W = 320;
-const WIN_H_COLLAPSED = 260;
-const WIN_H_EXPANDED = 500;
-const MARGIN = 20;
+function savedPositionForMode(mode: 'avatar' | 'chat') {
+  const saved = loadBuddyWindowPosition();
+  if (!saved) return { savedX: null, savedY: null };
+
+  const avatarW = 480;
+  const avatarH = 392;
+  const winW = mode === 'chat' ? 840 : avatarW;
+  const winH = mode === 'chat' ? 560 : avatarH;
+  const xOffset = mode === 'chat' ? Math.max(0, winW - avatarW) : 0;
+  const yOffset = Math.max(0, winH - avatarH);
+  return {
+    savedX: saved.x - xOffset,
+    savedY: saved.y - yOffset,
+  };
+}
 
 export function useWindowResize() {
+  const hideWindow = useCallback(async () => {
+    try {
+      await invoke('set_main_window_mode', { mode: 'hidden' });
+    } catch (e) {
+      console.error('Window hide mode failed:', e);
+    }
+  }, []);
+
   const collapseWindow = useCallback(async () => {
     try {
-      const win = getCurrentWindow();
-      const screenW = window.screen.width;
-      const screenH = window.screen.height;
-      await win.setSize(new LogicalSize(AVATAR_W, WIN_H_COLLAPSED));
-      await win.setPosition(new LogicalPosition(
-        screenW - AVATAR_W - MARGIN,
-        screenH - WIN_H_COLLAPSED - MARGIN,
-      ));
+      await invoke('set_main_window_mode', { mode: 'avatar', ...savedPositionForMode('avatar') });
     } catch (e) {
       console.error('Window collapse failed:', e);
     }
   }, []);
 
-  const expandWindow = useCallback(async () => {
+  const expandWindow = useCallback(async (mode: 'chat' | 'settings') => {
     try {
-      const win = getCurrentWindow();
-      const screenW = window.screen.width;
-      const screenH = window.screen.height;
-      const totalW = AVATAR_W + PANEL_W;
-      await win.setSize(new LogicalSize(totalW, WIN_H_EXPANDED));
-      await win.setPosition(new LogicalPosition(
-        screenW - totalW - MARGIN,
-        screenH - WIN_H_EXPANDED - MARGIN,
-      ));
+      const savedPosition = mode === 'chat' ? savedPositionForMode('chat') : { savedX: null, savedY: null };
+      await invoke('set_main_window_mode', { mode, ...savedPosition });
     } catch (e) {
       console.error('Window expand failed:', e);
     }
   }, []);
 
-  return { collapseWindow, expandWindow };
+  return { collapseWindow, expandWindow, hideWindow };
 }

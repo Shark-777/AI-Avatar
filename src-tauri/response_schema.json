@@ -1,0 +1,73 @@
+{
+  "type": "object",
+  "properties": {
+    "context": {
+      "type": "string",
+      "description": "one-sentence summary of what is visible on screen"
+    },
+    "error_detected": {
+      "type": "boolean"
+    },
+    "recommendation": {
+      "type": "string",
+      "description": "concrete, actionable suggestion — empty string if nothing to add"
+    },
+    "annotation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["none", "circle", "arrow", "rectangle"]
+        },
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        },
+        "w": {
+          "type": "integer"
+        },
+        "h": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "x", "y", "w", "h", "label"],
+      "additionalProperties": false
+    },
+    "action_suggestion": {
+      "type": "object",
+      "properties": {
+        "tool": {
+          "type": "string",
+          "enum": ["", "peekaboo.click", "peekaboo.type", "peekaboo.set-value"]
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": ["tool", "target"],
+      "additionalProperties": false
+    },
+    "avatar_state": {
+      "type": "string",
+      "enum": ["idle", "thinking", "speaking", "alert", "peek"]
+    },
+    "confidence": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "context",
+    "error_detected",
+    "recommendation",
+    "annotation",
+    "action_suggestion",
+    "avatar_state",
+    "confidence"
+  ],
+  "additionalProperties": false
+}

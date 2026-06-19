@@ -147,7 +147,7 @@ pub async fn analyze_with_claude(
     }));
 
     let body = json!({
-        "model": "claude-opus-4-8",
+        "model": "claude-sonnet-4-6",
         "max_tokens": 1024,
         "system": SYSTEM_PROMPT,
         "messages": [
@@ -205,7 +205,207 @@ pub async fn analyze_with_claude(
     Ok(claude_response)
 }
 
+pub async fn analyze_with_provider(
+    provider: &str,
+    image_base64: &str,
+    api_key: &str,
+    user_message: Option<&str>,
+) -> Result<ClaudeResponse> {
+    match provider {
+        "anthropic" | "claude" => analyze_with_claude(image_base64, api_key, user_message).await,
+        "openai" => analyze_with_openai(image_base64, api_key, user_message).await,
+        "gemini" => analyze_with_gemini(image_base64, api_key, user_message).await,
+        other => Err(anyhow!(
+            "{} key is saved, but Buddy screen analysis is currently wired for Claude, OpenAI, and Gemini. Select one of those providers for vision analysis.",
+            other
+        )),
+    }
+}
+
+async fn analyze_with_openai(
+    image_base64: &str,
+    api_key: &str,
+    user_message: Option<&str>,
+) -> Result<ClaudeResponse> {
+    let client = Client::new();
+    let text = user_message.unwrap_or("Please analyse this screenshot and provide your assessment.");
+    let image_url = format!("data:image/png;base64,{}", image_base64);
+    let body = json!({
+        "model": "gpt-4o-mini",
+        "response_format": { "type": "json_object" },
+        "max_tokens": 1024,
+        "messages": [
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            },
+            {
+                "role": "user",
+                "content": [
+                    { "type": "text", "text": text },
+                    { "type": "image_url", "image_url": { "url": image_url } }
+                ]
+            }
+        ]
+    });
+
+    let response = client
+        .post("https://api.openai.com/v1/chat/completions")
+        .bearer_auth(api_key)
+        .header("content-type", "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| anyhow!("Network error calling OpenAI API: {}", e))?;
+
+    let status = response.status();
+    let response_text = response
+        .text()
+        .await
+        .map_err(|e| anyhow!("Failed to read OpenAI API response body: {}", e))?;
+
+    if !status.is_success() {
+        return Err(anyhow!("OpenAI API returned HTTP {}: {}", status, response_text));
+    }
+
+    let envelope: Value = serde_json::from_str(&response_text)
+        .map_err(|e| anyhow!("Failed to parse OpenAI API envelope: {} — body: {}", e, response_text))?;
+    let text_content = envelope
+        .get("choices")
+        .and_then(|c| c.as_array())
+        .and_then(|arr| arr.first())
+        .and_then(|choice| choice.get("message"))
+        .and_then(|message| message.get("content"))
+        .and_then(|content| content.as_str())
+        .ok_or_else(|| anyhow!("Unexpected OpenAI API response shape: {}", response_text))?;
+
+    parse_model_json("OpenAI", text_content)
+}
+
+async fn analyze_with_gemini(
+    image_base64: &str,
+    api_key: &str,
+    user_message: Option<&str>,
+) -> Result<ClaudeResponse> {
+    const GEMINI_PRIMARY_MODEL: &str = "gemini-3-flash-preview";
+    const GEMINI_FALLBACK_MODEL: &str = "gemini-2.5-flash";
+
+    let client = Client::new();
+    let text = user_message.unwrap_or("Please analyse this screenshot and provide your assessment.");
+    let primary_body = build_gemini_body(image_base64, text, Some("medium"));
+    let fallback_body = build_gemini_body(image_base64, text, None);
+
+    let (response_text, model_used) = {
+        let primary_response = client
+            .post(format!(
+                "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent",
+                GEMINI_PRIMARY_MODEL
+            ))
+            .header("x-goog-api-key", api_key)
+            .header("content-type", "application/json")
+            .json(&primary_body)
+            .send()
+            .await
+            .map_err(|e| anyhow!("Network error calling Gemini API: {}", e))?;
+
+        let primary_status = primary_response.status();
+        let primary_text = primary_response
+            .text()
+            .await
+            .map_err(|e| anyhow!("Failed to read Gemini API response body: {}", e))?;
+
+        if primary_status.is_success() {
+            (primary_text, GEMINI_PRIMARY_MODEL)
+        } else {
+            let fallback_response = client
+                .post(format!(
+                    "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent",
+                    GEMINI_FALLBACK_MODEL
+                ))
+                .header("x-goog-api-key", api_key)
+                .header("content-type", "application/json")
+                .json(&fallback_body)
+                .send()
+                .await
+                .map_err(|e| anyhow!("Network error calling Gemini fallback API: {}", e))?;
+
+            let fallback_status = fallback_response.status();
+            let fallback_text = fallback_response
+                .text()
+                .await
+                .map_err(|e| anyhow!("Failed to read Gemini fallback response body: {}", e))?;
+
+            if fallback_status.is_success() {
+                (fallback_text, GEMINI_FALLBACK_MODEL)
+            } else {
+                return Err(anyhow!(
+                    "Gemini primary model {} returned HTTP {}: {} | fallback {} returned HTTP {}: {}",
+                    GEMINI_PRIMARY_MODEL,
+                    primary_status,
+                    primary_text,
+                    GEMINI_FALLBACK_MODEL,
+                    fallback_status,
+                    fallback_text
+                ));
+            }
+        }
+    };
+
+    let envelope: Value = serde_json::from_str(&response_text)
+        .map_err(|e| anyhow!("Failed to parse Gemini API envelope: {} — body: {}", e, response_text))?;
+    let text_content = envelope
+        .get("candidates")
+        .and_then(|c| c.as_array())
+        .and_then(|arr| arr.first())
+        .and_then(|candidate| candidate.get("content"))
+        .and_then(|content| content.get("parts"))
+        .and_then(|parts| parts.as_array())
+        .and_then(|parts| parts.first())
+        .and_then(|part| part.get("text"))
+        .and_then(|text| text.as_str())
+        .ok_or_else(|| anyhow!("Unexpected Gemini API response shape: {}", response_text))?;
+
+    parse_model_json(&format!("Gemini ({})", model_used), text_content)
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+fn build_gemini_body(image_base64: &str, text: &str, thinking_level: Option<&str>) -> Value {
+    let mut generation_config = json!({
+        "responseMimeType": "application/json",
+        "maxOutputTokens": 1024
+    });
+
+    if let Some(level) = thinking_level {
+        generation_config["thinkingConfig"] = json!({
+            "thinkingLevel": level
+        });
+    }
+
+    json!({
+        "system_instruction": {
+            "role": "system",
+            "parts": [
+                { "text": SYSTEM_PROMPT }
+            ]
+        },
+        "contents": [
+            {
+                "role": "user",
+                "parts": [
+                    { "text": text },
+                    {
+                        "inline_data": {
+                            "mime_type": "image/png",
+                            "data": image_base64
+                        }
+                    }
+                ]
+            }
+        ],
+        "generationConfig": generation_config
+    })
+}
 
 /// Removes optional ```json … ``` fences that the model might add.
 fn strip_markdown_fences(s: &str) -> &str {
@@ -221,4 +421,15 @@ fn strip_markdown_fences(s: &str) -> &str {
     // Remove closing fence
     let s = s.trim_end_matches("```").trim();
     s
+}
+
+fn parse_model_json(provider_name: &str, text_content: &str) -> Result<ClaudeResponse> {
+    let cleaned = strip_markdown_fences(text_content);
+    serde_json::from_str(cleaned).map_err(|e| {
+        anyhow!(
+            "Failed to parse {} JSON response: {}",
+            provider_name,
+            e
+        )
+    })
 }

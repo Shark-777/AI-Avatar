@@ -1,6 +1,6 @@
 .panel {
-  width: 320px;
-  height: 480px;
+  width: 360px;
+  height: 520px;
   background: rgba(12, 12, 24, 0.94);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -32,8 +32,8 @@
 
 .pos-bottom {
   border-radius: 16px 16px 0 0;
-  width: 480px;
-  height: 300px;
+  width: 560px;
+  height: 340px;
 }
 
 .header {
@@ -61,6 +61,12 @@
   border-radius: 50%;
   box-shadow: 0 0 6px #4ade80;
   animation: pulse 2s ease-in-out infinite;
+}
+
+.statusDotOff {
+  background: #8b8b96;
+  box-shadow: none;
+  animation: none;
 }
 
 @keyframes pulse {
@@ -92,6 +98,51 @@
   gap: 8px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.statusCard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.82);
+  flex-shrink: 0;
+}
+
+.statusCard > div {
+  display: grid;
+  align-items: start;
+  gap: 12px;
+}
+
+.statusCard strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  text-align: left;
+  line-height: 1.3;
+}
+
+.statusLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.36);
+}
+
+.lastSeen {
+  display: block !important;
+  grid-column: 1 / -1;
+}
+
+.lastSeen p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.68);
 }
 
 .messages::-webkit-scrollbar {
@@ -170,18 +221,6 @@
   border-radius: 2px 12px 12px 12px;
 }
 
-.stateIndicator {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #4ade80;
-  margin-bottom: 2px;
-}
-
-.stateIndicator[data-state="alert"] { background: #ff4444; }
-.stateIndicator[data-state="thinking"] { background: #c8a96e; }
-.stateIndicator[data-state="speaking"] { background: #60a5fa; }
-
 .bubbleTime {
   font-size: 10px;
   color: rgba(255,255,255,0.25);
@@ -194,6 +233,23 @@
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.micBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.84);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.micBtnActive {
+  background: rgba(255, 86, 86, 0.18);
+  border-color: rgba(255, 86, 86, 0.36);
+  color: #ffd4d4;
 }
 
 .input {
