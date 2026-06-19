@@ -2,5 +2,10 @@ node_modules/
 dist/
 .DS_Store
 *.local
+*.log
+.env
+.env.*
+.vscode/
+.idea/
 /src-tauri/target/
 /src-tauri/gen/

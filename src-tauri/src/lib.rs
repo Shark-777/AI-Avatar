@@ -289,9 +289,6 @@ pub fn run() {
     let starts_hidden = !config.pet_enabled;
 
     tauri::Builder::default()
-        // ── Plugins ──────────────────────────────────────────────────────────
-        .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_fs::init())
         // ── State ─────────────────────────────────────────────────────────────
         .manage(AppState {
             db: Mutex::new(db),

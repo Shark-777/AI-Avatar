@@ -13,13 +13,6 @@
     "core:window:allow-set-resizable",
     "core:window:allow-set-focus",
     "core:window:allow-start-dragging",
-    "core:event:default",
-    "shell:allow-open",
-    "fs:allow-read",
-    "fs:allow-write",
-    "fs:allow-create",
-    "fs:allow-mkdir",
-    "fs:allow-remove",
-    "fs:allow-read-dir"
+    "core:event:default"
   ]
 }
